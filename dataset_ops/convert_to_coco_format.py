@@ -24,7 +24,7 @@ def resize_by_keeping_ratio(image, new_height, fixed_width):
 
 
 target_root_name = "../datasets/polyps"
-target_set_name = "train"
+target_set_name = "val"
 source_files_path = os.path.join("/home/gorkem/Desktop/data/EndoCV2021/edited_files", target_set_name)
 
 classes = ["polyp"]
@@ -66,10 +66,10 @@ for image_path in tqdm(image_paths):
     try:
         if len(bbox_annotations) > 0 and not ("\n" in bbox_annotations):
             image = cv2.imread(image_path)
-            image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            new_image, new_height, new_width, scale = resize_by_keeping_ratio(image_RGB, new_image_height, 910)
-            new_image = cv2.cvtColor(new_image, cv2.COLOR_RGB2BGR)
+            new_image, new_height, new_width, scale = resize_by_keeping_ratio(image, new_image_height, 910)
+            # new_image = cv2.cvtColor(new_image.astype("float32"), cv2.COLOR_RGB2BGR)
 
             for bbox_annotation in bbox_annotations:
                 bbox_info = bbox_annotation.split(" ")
@@ -95,7 +95,8 @@ for image_path in tqdm(image_paths):
 
             image_dict = {}
             image_dict["id"] = image_counter
-            image_dict["file_name"] = image_name + ".jpg"
+            image_dict["file_name"] = str(image_counter) + ".jpg"
+            image_dict["original_file_name"] = image_name + ".jpg"
             image_dict["width"] = new_width
             image_dict["height"] = new_height
             annotations["images"].append(image_dict)
