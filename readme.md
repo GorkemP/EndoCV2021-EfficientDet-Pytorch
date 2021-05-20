@@ -15,3 +15,9 @@ Several additions are made to the standard repository:
 - And several example scripts:
   - Inference on single image
   - Visualizations of augmentations
+
+#### Proposed approach
+![flowchart of polyp detection framework](/images/pipeline.png)
+
+#### Prediction of individual models (first row) and their ensemble result (second row)
+![polyp detection results](/images/polyp_images_final.png)
