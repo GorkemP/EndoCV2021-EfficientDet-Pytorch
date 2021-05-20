@@ -6,8 +6,8 @@ import glob
 import shutil
 from random import shuffle
 
-root_path = "/home/gorkem/Desktop/data/EndoCV2021/edited_files"
-val_ratio = 0.25
+root_path = "/home/ws2080/Desktop/data/EndoCV2021/edited_files/paper"
+val_ratio = 0.176
 
 train_path = os.path.join(root_path, "train")
 val_path = os.path.join(root_path, "val")
@@ -19,8 +19,8 @@ if os.path.isdir(val_path):
     shutil.rmtree(val_path)
 os.mkdir(val_path)
 
-all_files = glob.glob(os.path.join(root_path, "all_files", "*.jpg"))
-all_txt_files = glob.glob(os.path.join(root_path, "all_files", "*.txt"))
+all_files = glob.glob(os.path.join(root_path, "train_val", "*.jpg"))
+all_txt_files = glob.glob(os.path.join(root_path, "train_val", "*.txt"))
 shuffle(all_files)
 
 val_files = all_files[:int(len(all_files) * val_ratio)]

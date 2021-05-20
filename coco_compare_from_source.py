@@ -1,3 +1,6 @@
+# Created by Gorkem Polat at 1.03.2021
+# contact: polatgorkem@gmail.com
+
 # Author: Zylo117
 
 """
@@ -12,7 +15,7 @@ change compound_coef
 
 import json
 import os
-
+import glob
 import argparse
 import torch
 import yaml
@@ -25,15 +28,16 @@ from efficientdet.utils import BBoxTransform, ClipBoxes
 from utils.utils import preprocess, invert_affine, postprocess, boolean_string
 
 ap = argparse.ArgumentParser()
-project_name = "polyps_1"
-efficientdet_version = 1
-weights_file = "trained_weights/efficientdet-d1_best_89.pth"
+project_name = "polyps"
+efficientdet_version = 0
+weights_file = "trained_weights/efficientdet-d0_best_48.pth"
 # weights_file = "logs/polyps/efficientdet-d0_best.pth"
 conf_threshold = 0.1
 nms_threshold = 0.2
 
 ap.add_argument('-p', '--project', type=str, default=project_name, help='project file that contains parameters')
 ap.add_argument('-c', '--compound_coef', type=int, default=efficientdet_version, help='coefficients of efficientdet')
+ap.add_argument("-if", "--image_folder", type=str, default="/home/ws2080/Desktop/data/EndoCV2021/edited_files/val")
 ap.add_argument('-w', '--weights', type=str, default=weights_file, help='/path/to/weights')
 ap.add_argument('--nms_threshold', type=float, default=nms_threshold,
                 help='nms threshold, don\'t change it if not for testing purposes')
@@ -43,6 +47,7 @@ ap.add_argument('--float16', type=boolean_string, default=False)
 ap.add_argument('--override', type=boolean_string, default=True, help='override previous bbox results file if exists')
 args = ap.parse_args()
 
+image_path_folder = args.image_folder
 compound_coef = args.compound_coef
 nms_threshold = args.nms_threshold
 use_cuda = args.cuda
@@ -68,7 +73,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
 
     for image_id in tqdm(image_ids):
         image_info = coco.loadImgs(image_id)[0]
-        image_path = img_path + image_info['file_name']
+        image_path = os.path.join(img_path, image_info['original_file_name'])
 
         ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_sizes[compound_coef],
                                                          mean=params['mean'], std=params['std'])
@@ -149,7 +154,7 @@ def _eval(coco_gt, image_ids, pred_json_path):
 if __name__ == '__main__':
     SET_NAME = params['val_set']
     VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
-    VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
+    VAL_IMGS = image_path_folder
     MAX_IMAGES = 10000
     coco_gt = COCO(VAL_GT)
     image_ids = coco_gt.getImgIds()[:MAX_IMAGES]

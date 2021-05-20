@@ -1,18 +1,22 @@
-# Created by Gorkem Polat at 10.03.2021
+# Created by Gorkem Polat at 15.03.2021
 # contact: polatgorkem@gmail.com
 
 import os
 import glob
+import cv2
 import json
 import shutil
-import cv2
 from tqdm import tqdm
 
-# For single split
-target_root_name = os.path.join("../datasets/polyps_all_centers")
-target_set_name = "test"
-source_files_path = os.path.join("/home/ws2080/Desktop/data/EndoCV2021/edited_files/all_files_test")
+fold_id = 3
+target_set_name = "val"
+target_root_name = os.path.join("../datasets/polyps_paper_kvasir_" + str(fold_id))
+source_files_path = os.path.join(
+        "/home/ws2080/Desktop/data/EndoCV2021/edited_files/paper/Kvasir-SEG/CV_folds/fold_" + str(fold_id),
+        target_set_name)
+GT_annotation = "/home/ws2080/Desktop/data/EndoCV2021/edited_files/paper/Kvasir-SEG/kvasir_seg_COCO.json"
 
+print("fold: " + str(fold_id) + " | " + " target: " + target_set_name)
 classes = ["polyp"]
 
 os.makedirs(target_root_name, exist_ok=True)
@@ -23,6 +27,11 @@ if os.path.isdir(os.path.join(target_root_name, target_set_name)):
 if os.path.isfile(os.path.join(target_root_name, "annotations", "instances_" + target_set_name + ".json")):
     os.remove(os.path.join(target_root_name, "annotations", "instances_" + target_set_name + ".json"))
 os.makedirs(os.path.join(target_root_name, target_set_name))
+
+f = open(GT_annotation)
+all_annotations = json.load(f)
+
+image_paths = glob.glob(os.path.join(source_files_path, "*.jpg"))
 
 annotations = {}
 annotations["categories"] = []
@@ -35,40 +44,27 @@ for id, class_name in enumerate(classes):
     category["supercategory"] = "None"
     annotations["categories"].append(category)
 
-image_paths = glob.glob(os.path.join(source_files_path, "*.jpg"))
-
 image_counter = 0
 annotation_counter = 0
 for image_path in tqdm(image_paths):
-    image_name = image_path.split("/")[-1][:-4]
+    image_name = image_path.split("/")[-1]
+    image_id = [x for x in all_annotations["images"] if x["file_name"] == image_name]
+    image_id = image_id[0]["id"]
+    bbox_annotations = [x for x in all_annotations["annotations"] if x["image_id"] == image_id]
 
-    with open(image_path[:-4] + ".txt") as f:
-        bbox_annotations = f.readlines()
-
-    # eliminate duplicate lines
-    bbox_annotations = list(set(bbox_annotations))
     try:
         if len(bbox_annotations) > 0 and not ("\n" in bbox_annotations):
             image = cv2.imread(image_path)
             height, width, _ = image.shape
 
             for bbox_annotation in bbox_annotations:
-                bbox_info = bbox_annotation.split(" ")
-
-                category_id = classes.index(bbox_info[0]) + 1
-
-                x = int(bbox_info[1])
-                y = int(bbox_info[2])
-                object_width = int(bbox_info[3]) - int(bbox_info[1])
-                object_height = int(bbox_info[4]) - int(bbox_info[2])
-
                 annotation_dict = {}
                 annotation_dict["id"] = annotation_counter
                 annotation_dict["image_id"] = image_counter
-                annotation_dict["category_id"] = category_id
+                annotation_dict["category_id"] = bbox_annotation["category_id"]
                 annotation_dict["iscrowd"] = 0
-                annotation_dict["area"] = object_width * object_height
-                annotation_dict["bbox"] = [x, y, object_width, object_height]
+                annotation_dict["area"] = bbox_annotation["area"]
+                annotation_dict["bbox"] = bbox_annotation["bbox"]
                 annotations["annotations"].append(annotation_dict)
                 annotation_counter += 1
 
@@ -77,7 +73,7 @@ for image_path in tqdm(image_paths):
             image_dict = {}
             image_dict["id"] = image_counter
             image_dict["file_name"] = str(image_counter) + ".jpg"
-            image_dict["original_file_name"] = image_name + ".jpg"
+            image_dict["original_file_name"] = image_name
             image_dict["width"] = width
             image_dict["height"] = height
             annotations["images"].append(image_dict)

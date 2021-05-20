@@ -42,12 +42,12 @@ image_path = "/home/gorkem/Desktop/data/EndoCV2021/original_files/trainData_Endo
 image_paths = glob.glob(os.path.join(image_path, "*.jpg"))
 image_path = random.choice(image_paths)
 image = cv2.imread(image_path)
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 new_image, scale = resize_by_keeping_ratio(image, 512, 910)
 print(image_path)
 print("height: " + str(image.shape[0]) + " width: " + str(image.shape[1]))
 
 new_image = new_image / 255
-show_image(new_image)
-# show_image_opencv(new_image)
+# show_image(new_image)
+show_image_opencv(new_image.astype("float32"))

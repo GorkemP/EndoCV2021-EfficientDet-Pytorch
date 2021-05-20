@@ -29,15 +29,17 @@ from efficientdet.dataset import CocoDataset, Resizer, Normalizer, Augmenter, co
 from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
 from utils.utils import replace_w_sync_bn, CustomDataParallel, get_last_weights, init_weights, boolean_string
+import albumentations as A
+import cv2
 
 # import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from utils.augmentations import CustomAugmenter
+from utils.augmentations import CustomAugmenter, CustomAugmenter_experimental
 
 project_name = "polyps"
 efficientdet_version = 0
-num_worker = 4
+num_worker = 8
 batch_size = 10
 lr = 0.01
 num_epochs = 100
@@ -50,12 +52,35 @@ mAP_interval = 5
 
 def show_torch_data(img):
     npimg = img.numpy()
-    # plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.imshow(npimg)
     plt.show()
 
 
-def draw_bbox_on_image_augmented_solo(image, annotations):
+def draw_bbox_on_image_augmented_numpy(img, annotations):
+    image = img
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+
+    for i in range(len(annotations)):
+        rect = patches.Rectangle((annotations[i][0], annotations[i][1]),
+                                 annotations[i][2] - annotations[i][0],
+                                 annotations[i][3] - annotations[i][1],
+                                 linewidth=2,
+                                 edgecolor="yellow",
+                                 facecolor='none')
+
+        ax.add_patch(rect)
+        plt.text(annotations[i][0],
+                 annotations[i][1] - 3,
+                 "polyp",
+                 color="yellow")
+
+    plt.tight_layout()
+    # plt.axis("off")
+    plt.show()
+
+
+def draw_bbox_on_image_augmented_torch(image, annotations):
     image = image.numpy()
     fig, ax = plt.subplots()
     ax.imshow(image)
@@ -75,7 +100,7 @@ def draw_bbox_on_image_augmented_solo(image, annotations):
                  color="yellow")
 
     plt.tight_layout()
-    plt.axis("off")
+    # plt.axis("off")
     plt.show()
 
 
@@ -132,11 +157,34 @@ input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
 training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
                            transform=transforms.Compose([
                                # Normalizer(mean=params.mean, std=params.std),
-                               CustomAugmenter(),
-                               Resizer(input_sizes[opt.compound_coef])
+                               CustomAugmenter(
+                                       A.Compose([
+                                           # A.OneOf([
+                                           #     A.ColorJitter(brightness=0.0, contrast=0.0, saturation=0.2, hue=0.1,
+                                           #                   p=0.5),
+                                           #     A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.0, hue=0.1,
+                                           #                   p=0.5),
+                                           # ], p=0.9),
+                                           # A.IAAPerspective(),
+                                           # A.ShiftScaleRotate(shift_limit=0, rotate_limit=0, scale_limit=(-0.8, 1.0),
+                                           #                    border_mode=cv2.BORDER_CONSTANT, p=1),
+                                           # A.RandomScale(0.5, p=1)
+                                           # A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.0, hue=0.0, p=1),
+                                           # A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3),
+                                           # A.Rotate((180), border_mode=cv2.BORDER_CONSTANT),
+                                           # A.HorizontalFlip(),
+                                           # A.Cutout(num_holes=8, max_h_size=128, max_w_size=128, fill_value=0, p=1)
+                                           # A.VerticalFlip()
+                                       ], bbox_params=A.BboxParams(format="pascal_voc", min_visibility=0.5))
+                               ),
+
+                               Resizer(input_sizes[3])
                            ]))
 
-selected_sample = training_set[8]
+selected_sample = training_set[4]
 image_selected = selected_sample["img"]
 annotations_selected = selected_sample["annot"]
-draw_bbox_on_image_augmented_solo(image_selected, annotations_selected)
+
+print(image_selected.shape)
+draw_bbox_on_image_augmented_numpy(image_selected, annotations_selected)
+# draw_bbox_on_image_augmented_solo(image_selected, annotations_selected)

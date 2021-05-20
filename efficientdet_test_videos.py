@@ -2,7 +2,7 @@
 # Script's Author: winter2897 
 
 """
-Simple Inference Script of EfficientDet-Pytorch for detecting objects on webcam
+Simple Inference Script of EndoCV2021-EfficientDet-Pytorch for detecting objects on webcam
 """
 import time
 import torch

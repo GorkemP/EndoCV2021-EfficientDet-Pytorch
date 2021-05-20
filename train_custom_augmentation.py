@@ -1,8 +1,7 @@
-# Created by Gorkem Polat at 25.02.2021
-# contact: polatgorkem@gmail.com
 # original author: signatrix, zylo117
 # adapted from https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch
 # modified by GorkemP
+# contact: polatgorkem@gmail.com
 
 import argparse
 import os
@@ -22,7 +21,8 @@ from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
 from utils.utils import replace_w_sync_bn, CustomDataParallel, get_last_weights, init_weights, boolean_string
 from utils.augmentations import CustomAugmenter
-
+import albumentations as A
+import cv2
 import wandb
 from statistics import mean
 
@@ -35,17 +35,30 @@ from utils.utils import preprocess, invert_affine, postprocess
 
 enable_wandb = True
 
-project_name = "polyps"
+project_name = "polyps_paper_kvasir_0"
 efficientdet_version = 0
-num_worker = 4
+num_worker = 8
 batch_size = 10
-lr = 0.01
-num_epochs = 100
+lr = 0.005
+num_epochs = 300
 head_only = False
 weights_file = "weights/efficientdet-d" + str(efficientdet_version) + ".pth"
-early_stopping_patience = 12
-lr_scheduler_patience = 5
-mAP_interval = 5
+early_stopping_patience = 25
+lr_scheduler_patience = 10
+mAP_interval = 10
+
+# COCO variables
+compound_coef = efficientdet_version
+conf_threshold = 0.1
+nms_threshold = 0.2
+use_cuda = True
+gpu = 0
+use_float16 = False
+weights_path = f"logs/{project_name}/efficientdet-d{efficientdet_version}_best.pth"
+
+params = yaml.safe_load(open(f'projects/{project_name}.yml'))
+obj_list = params['obj_list']
+input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
 
 if enable_wandb:
     wandb.init(project="endocv2021", entity="gorkemp", save_code=True)
@@ -53,6 +66,10 @@ if enable_wandb:
     wandb.run.save()
 
     config = wandb.config
+    config.computer = "ws2080"
+    config.num_gpus = params["num_gpus"]
+    config.conf_thres = conf_threshold
+    config.nms_thres = nms_threshold
     config.project_name = project_name
     config.configuration = efficientdet_version
     config.num_worker = num_worker
@@ -62,17 +79,10 @@ if enable_wandb:
     config.num_worker = num_worker
     config.early_stopping_patience = early_stopping_patience
 
-# COCO variables
-compound_coef = efficientdet_version
-nms_threshold = 0.5
-use_cuda = True
-gpu = 0
-use_float16 = False
-weights_path = f"logs/{project_name}/efficientdet-d{efficientdet_version}_best.pth"
-
-params = yaml.safe_load(open(f'projects/{project_name}.yml'))
-obj_list = params['obj_list']
-input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
+print("mean: " + str(params["mean"]))
+print("std: " + str(params["std"]))
+print("anchor scales: " + str(params["anchors_scales"]))
+print("anchor ratios: " + str(params["anchors_ratios"]))
 
 
 def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
@@ -184,7 +194,7 @@ def get_mAP(opt, set_type="val_set"):
         if use_float16:
             model.half()
 
-    evaluate_coco(VAL_IMGS, SET_NAME, image_ids, coco_gt, model)
+    evaluate_coco(VAL_IMGS, SET_NAME, image_ids, coco_gt, model, conf_threshold)
 
     COCO_result = _eval(coco_gt, image_ids, f'{SET_NAME}_bbox_results.json')
     return COCO_result[0], COCO_result[1]
@@ -211,7 +221,7 @@ def get_args():
                              'useful in early stage convergence or small/easy dataset')
     parser.add_argument('--lr', type=float, default=lr)
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
-                                                                   'suggest using \'admaw\' until the'
+                                                                   'suggest using \'adamw\' until the'
                                                                    ' very final stage then switch to \'sgd\'')
     parser.add_argument('--num_epochs', type=int, default=num_epochs)
     parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
@@ -282,9 +292,29 @@ def train(opt):
 
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
-                               transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                             CustomAugmenter(),
-                                                             Resizer(input_sizes[opt.compound_coef])]))
+                               transform=transforms.Compose([
+                                   Normalizer(mean=params.mean, std=params.std),
+                                   CustomAugmenter(
+                                           A.Compose([
+                                               # A.IAAPerspective(),
+                                               # A.OneOf([
+                                               #     A.ColorJitter(brightness=0.0, contrast=0.0, saturation=0.2, hue=0.1,
+                                               #                   p=0.5),
+                                               #     A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.0, hue=0.1,
+                                               #                   p=0.5),
+                                               # ], p=0.8),
+                                               A.ShiftScaleRotate(shift_limit=0,
+                                                                  rotate_limit=0,
+                                                                  scale_limit=(-0.8, 1.0),
+                                                                  border_mode=cv2.BORDER_CONSTANT),
+                                               # A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.0, hue=0.0),
+                                               A.Rotate(180, border_mode=cv2.BORDER_CONSTANT),
+                                               A.HorizontalFlip(),
+                                               # A.VerticalFlip()
+                                           ], bbox_params=A.BboxParams(format="pascal_voc",
+                                                                       min_visibility=0.3))
+                                   ),
+                                   Resizer(input_sizes[opt.compound_coef])]))
     training_generator = DataLoader(training_set, **training_params)
 
     val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.val_set,

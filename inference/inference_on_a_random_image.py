@@ -22,7 +22,7 @@ from utils.utils import preprocess, invert_affine, postprocess
 
 def draw_bboxes_on_image(image, annotations, class_names):
     image = image[:, :, ::-1]
-    fig, ax = plt.subplots(figsize=(15, 15))
+    fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(image)
 
     for i in range(len(out[0]["rois"])):
@@ -30,21 +30,22 @@ def draw_bboxes_on_image(image, annotations, class_names):
                                  annotations[0]["rois"][i][2] - annotations[0]["rois"][i][0],
                                  annotations[0]["rois"][i][3] - annotations[0]["rois"][i][1],
                                  linewidth=2,
-                                 edgecolor=colors_for_classes[annotations[0]["class_ids"][i]],
+                                 edgecolor="yellow",
                                  facecolor='none')
         ax.add_patch(rect)
         plt.text(annotations[0]["rois"][i][0],
                  annotations[0]["rois"][i][1] - 3,
                  class_names[annotations[0]["class_ids"][i]] + " " + "{:.2f}".format(annotations[0]["scores"][i]),
-                 color=colors_for_classes[annotations[0]["class_ids"][i]])
+                 color="yellow")
 
+    plt.tight_layout()
     plt.axis("off")
     plt.show()
 
 
 def draw_groundtruth_bboxes_on_image(image, annotations, class_names):
     image = image[:, :, ::-1]
-    fig, ax = plt.subplots(figsize=(15, 15))
+    fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(image)
 
     for object in annotations:
@@ -52,40 +53,44 @@ def draw_groundtruth_bboxes_on_image(image, annotations, class_names):
                                  object["bbox"][2],
                                  object["bbox"][3],
                                  linewidth=2,
-                                 edgecolor=colors_for_classes[object["category_id"] - 1],
+                                 edgecolor="yellow",
                                  facecolor='none')
 
         ax.add_patch(rect)
         plt.text(object["bbox"][0],
                  object["bbox"][1] - 3,
                  class_names[object["category_id"] - 1],
-                 color=colors_for_classes[object["category_id"] - 1])
+                 color="yellow")
 
+    plt.tight_layout()
     plt.axis("off")
     plt.show()
 
 
-only_prediction = True
 set_name = "val"
-project_name = "birdview_vehicles"
-compound_coef = 0
+project_name = "polyps"
+compound_coef = 3
 force_input_size = None  # set None to use default size
-img_paths = glob.glob("../datasets/" + project_name + "/" + set_name + "/*.jpg")
+
+images_full_path = "../datasets/" + project_name + "/" + set_name + "/*.jpg"
+# images_full_path = "/home/ws2080/Desktop/data/EndoCV2021/edited_files/val/*.jpg"
+
+img_paths = glob.glob(images_full_path)
 annotations_path = "../datasets/" + project_name + "/annotations/instances_" + set_name + ".json"
 f = open(annotations_path)
 annotations = json.load(f)
 
 img_path = img_paths[random.randint(0, len(img_paths))]
+img_path = random.choice(img_paths)
+
 img_name = img_path.split("/")[-1]
-
 image_id = [x["id"] for x in annotations["images"] if x["file_name"] == img_name]
-
 image_gt_annotations = [x for x in annotations["annotations"] if x["image_id"] == image_id[0]]
 
-weight_file = f"../logs/birdview_vehicles/efficientdet-d{compound_coef}_best.pth"
+weight_file = f"../trained_weights/efficientdet-d3_best_67.pth"
 
-threshold = 0.2
-iou_threshold = 0.2
+threshold = 0.1
+iou_threshold = 0.1  # Used for NMS
 
 use_cuda = True
 use_float16 = False
@@ -139,5 +144,5 @@ out = invert_affine(framed_metas, out)
 image = cv2.imread(os.path.join(img_path))
 
 draw_bboxes_on_image(image, out, obj_list)
-# plt.close()
+plt.close()
 draw_groundtruth_bboxes_on_image(image, image_gt_annotations, obj_list)

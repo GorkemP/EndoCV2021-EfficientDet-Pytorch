@@ -1,7 +1,7 @@
 # Author: Zylo117
 
 """
-Simple Inference Script of EfficientDet-Pytorch
+Simple Inference Script of EndoCV2021-EfficientDet-Pytorch
 """
 import time
 import torch
