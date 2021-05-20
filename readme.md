@@ -1,2 +1,1 @@
-# EfficientDet-Pytorch-EndoCV2021
- EfficientDet for EndoCV2021 Challenge
+# EndoCV2021 Challenge - Polyp detection codes using EfficientDet
