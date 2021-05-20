@@ -1,3 +1,17 @@
-# EndoCV2021 Challenge - Polyp detection codes using EfficientDet
+# EndoCV2021 Addressing generalisability in polyp detection and segmentation challenge
 
-##This repository can be used to train EfficientDet models on EndoCV2021 dataset and Kvasir-SEG dataset  
+### This repository can be used to train EfficientDet models on EndoCV2021 dataset and Kvasir-SEG dataset  
+
+### 🏆 The following paper (techniques of which is included in this repository) got the first rank in the polyp detection sub-challenge 
+
+EfficientDet implementation is directly adapted from the [zylo117 EfficientDet](https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch) repository.
+
+Several additions are made to the standard repository:
+- [wandb](https://wandb.ai/site) integration is provided into code. Every **n**th step, training report the mAP of train and validation sets to the wandb platform.
+- Early stopping is added. If there is no increase in the mAP of validation set for the last n epoch, training stops.  
+- Learning rate scheduling is added. If there is no increase in the mAP of calidation set for the last k epoch, learning rate is decreased with a factor of m.
+- [Albumentations](https://albumentations.ai/) library is used to augment dataset.
+- Ensemble code that merges different predictions is added. It uses weighted box fusion technique.
+- And several example scripts:
+  - Inference on single image
+  - Visualizations of augmentations
