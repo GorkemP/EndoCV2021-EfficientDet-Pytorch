@@ -1,4 +1,4 @@
-# EndoCV2021 Addressing generalisability in polyp detection and segmentation challenge
+# EndoCV2021 - Addressing generalisability in polyp detection and segmentation challenge & workshop
 
 ### This repository can be used to train EfficientDet models on EndoCV2021 dataset and Kvasir-SEG dataset  
 
