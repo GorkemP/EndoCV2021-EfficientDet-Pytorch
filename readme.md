@@ -2,8 +2,20 @@
 
 ### This repository can be used to train EfficientDet models on EndoCV2021 dataset and Kvasir-SEG dataset  
 
-### 🏆 The following paper (techniques of which is included in this repository) got the first rank in the polyp detection sub-challenge 
+### 🏆 The following paper (implementation of which is included in this repository) got the first rank in the polyp detection sub-challenge 
 
+[Polyp Detection in Colonoscopy Images using Deep Learning and Bootstrap Aggregation](http://ceur-ws.org/Vol-2886/paper9.pdf)
+
+```BibTeX
+@inproceedings{polat2021polyp,
+  title={Polyp Detection in Colonoscopy Images using Deep Learning and Bootstrap Aggregation.},
+  author={Polat, Gorkem and Isik Polat, Ece and Kayabay, Kerem and Temizel, Alptekin},
+  booktitle={EndoCV@ ISBI},
+  pages={90--100},
+  year={2021}
+}
+```
+-----
 EfficientDet implementation is directly adapted from the [zylo117 EfficientDet](https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch) repository.
 
 Several additions are made to the standard repository:
