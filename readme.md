@@ -9,7 +9,7 @@ EfficientDet implementation is directly adapted from the [zylo117 EfficientDet](
 Several additions are made to the standard repository:
 - [wandb](https://wandb.ai/site) integration is provided into code. Every **n**th step, training report the mAP of train and validation sets to the wandb platform.
 - Early stopping is added. If there is no increase in the mAP of validation set for the last n epoch, training stops.  
-- Learning rate scheduling is added. If there is no increase in the mAP of calidation set for the last k epoch, learning rate is decreased with a factor of m.
+- Learning rate scheduling is added. If there is no increase in the mAP of the validation set for the last k epoch, learning rate is decreased with a factor of m.
 - [Albumentations](https://albumentations.ai/) library is used to augment dataset.
 - Ensemble code that merges different predictions is added. It uses weighted box fusion technique.
 - And several example scripts:
