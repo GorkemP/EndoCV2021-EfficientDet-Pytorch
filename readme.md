@@ -33,3 +33,16 @@ Several additions are made to the standard repository:
 
 #### Prediction of individual models (first row) and their ensemble result (second row)
 ![polyp detection results](/images/polyp_images_final.png)
+
+
+## How to run
+
+* First, it is advised to experiment with the [original repository](https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch) to warmup
+* Setup environment using ```environment.yml```.
+* After downloading the EndoCV2021 dataset, use ```dataset_ops/split_to_4_fold.py``` to create bootstrap folders. Use ```dataset_ops/convert_*``` scripts if necessary.
+  * `split_to_4_fold.py` creates CV folds for bootstrap aggregation. For each fold, different project should be created.
+  * Since the original repository accepts COCO format, use `convert_to_coco_format_*.py` files to convert annotations.
+* Use `train_custom_augmentation` file to run the codes, set necessary parameters like `project_name`,`efficientdet_version`.
+* Use `inference_on_4_model.py` to get results for test set.
+* Use `ensemble_4.py` to use weighted-box ensemble results.
+* In the visualizations folder there are many scripts to visualize bounding boxes, individual and ensemble results.
