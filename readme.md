@@ -8,11 +8,16 @@
 
 ```BibTeX
 @inproceedings{polat2021polyp,
-  title={Polyp Detection in Colonoscopy Images using Deep Learning and Bootstrap Aggregation.},
-  author={Polat, Gorkem and Isik Polat, Ece and Kayabay, Kerem and Temizel, Alptekin},
-  booktitle={EndoCV@ ISBI},
+  author={Polat, Gorkem and Isik-Polat, Ece and Kayabay, Kerem and Temizel, Alptekin},
+  title={Polyp Detection in Colonoscopy Images using Deep Learning and Bootstrap Aggregation},
+  booktitle = {Proceedings of the 3rd International Workshop and Challenge on Computer
+               Vision in Endoscopy (EndoCV 2021) co-located with with the 18th {IEEE}International Symposium on Biomedical Imaging {(ISBI} 2021), Nice,
+               France, April 13, 2021},
+  volume    = {2886},
+  publisher = {CEUR-WS.org},
   pages={90--100},
-  year={2021}
+  year      = {2021}
+}
 }
 ```
 -----
